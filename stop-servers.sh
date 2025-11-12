@@ -13,7 +13,7 @@ pkill -f "node.*watch" 2>/dev/null
 
 sleep 2
 
-if ! lsof -ti:8000 > /dev/null 2>&1 && ! lsof -ti:9000 > /dev/null 2>&1; then
+if ! lsof -ti:3001 > /dev/null 2>&1 && ! lsof -ti:4000 > /dev/null 2>&1; then
     echo "✅ All servers stopped successfully!"
 else
     echo "⚠️  Some processes may still be running"

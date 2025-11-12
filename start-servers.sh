@@ -41,8 +41,8 @@ start_servers() {
     echo ""
     echo "✅ Servers started!"
     echo ""
-    echo "📍 Backend:  http://localhost:9000"
-    echo "📍 Frontend: http://localhost:8000"
+    echo "📍 Backend:  http://localhost:4000"
+    echo "📍 Frontend: http://localhost:3001"
     echo ""
     echo "💡 Open http://localhost:8000 in your browser to use the app!"
     echo ""
@@ -56,7 +56,7 @@ check_status() {
     
     if lsof -ti:9000 > /dev/null 2>&1; then
         echo "✅ Backend (port 9000): Running"
-        curl -s http://localhost:9000/health | head -1
+        curl -s http://localhost:4000/health | head -1
     else
         echo "❌ Backend (port 9000): Not running"
     fi
@@ -65,7 +65,7 @@ check_status() {
     
     if lsof -ti:8000 > /dev/null 2>&1; then
         echo "✅ Frontend (port 8000): Running"
-        echo "   Open http://localhost:8000 in your browser"
+        echo "   Open http://localhost:3001 in your browser"
     else
         echo "❌ Frontend (port 8000): Not running"
     fi
