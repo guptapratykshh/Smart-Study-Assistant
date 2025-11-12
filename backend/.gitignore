@@ -10,7 +10,7 @@ yarn-error.log*
 dist/
 build/
 
-# Firebase service account keys (security)
+# Firebase service account keys (security - never commit these!)
 *-firebase-adminsdk-*.json
-firebase-adminsdk-*.json
+prasf-3c29f-firebase-adminsdk-fbsvc-5c2df7d7bf.json
 
