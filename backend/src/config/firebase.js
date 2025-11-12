@@ -11,6 +11,14 @@ const __dirname = dirname(__filename);
 
 let serviceAccount;
 
+// Debug: Log which environment variables are available (without exposing secrets)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🔍 Firebase Config Check:');
+  console.log('   FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
+  console.log('   FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Set' : '❌ Missing');
+  console.log('   FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
+}
+
 // Use environment variables (recommended for production)
 if (process.env.FIREBASE_PRIVATE_KEY) {
     serviceAccount = {
@@ -34,11 +42,19 @@ if (process.env.FIREBASE_PRIVATE_KEY) {
     serviceAccount = JSON.parse(serviceAccountData);
     console.log('⚠️  Using Firebase service account from file (local development only)');
   } catch (error) {
-    console.error('❌ Firebase service account not found. Please configure environment variables:');
-    console.error('   - FIREBASE_PRIVATE_KEY');
-    console.error('   - FIREBASE_PROJECT_ID');
-    console.error('   - FIREBASE_CLIENT_EMAIL');
-    throw new Error('Firebase configuration missing. Set environment variables or provide service account file.');
+    console.error('\n❌ Firebase configuration missing!');
+    console.error('\n📋 Required Environment Variables:');
+    console.error('   1. FIREBASE_PRIVATE_KEY (most important)');
+    console.error('   2. FIREBASE_PROJECT_ID');
+    console.error('   3. FIREBASE_CLIENT_EMAIL');
+    console.error('\n🔧 How to fix:');
+    console.error('   1. Go to Render Dashboard → Your Service → Environment');
+    console.error('   2. Add each variable with the exact name above');
+    console.error('   3. For FIREBASE_PRIVATE_KEY, copy the entire key from your JSON file');
+    console.error('   4. Make sure FIREBASE_PRIVATE_KEY includes \\n (backslash-n) characters');
+    console.error('   5. Save and redeploy');
+    console.error('\n💡 Tip: Run "node extract-firebase-env.js" locally to get formatted values\n');
+    throw new Error('Firebase configuration missing. Set environment variables in Render dashboard.');
   }
 }
 
