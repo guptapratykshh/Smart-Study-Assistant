@@ -13,12 +13,41 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// CORS Configuration - Allow multiple origins (localhost for dev, deployed frontends)
+const allowedOrigins = [
+  'http://localhost:3001',
+  'http://localhost:3000',
+  'https://smart-study-assistantt.netlify.app',
+  'https://smart-study-assistant.netlify.app',
+  process.env.FRONTEND_URL,
+  process.env.VERCEL_URL,
+  process.env.NETLIFY_URL
+].filter(Boolean); // Remove undefined values
+
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // For development, allow localhost on any port
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️ CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
