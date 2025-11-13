@@ -1,7 +1,7 @@
 import { fetchWikipediaData } from '../services/wikipediaService.js';
 import { generateAIContent } from '../services/aiService.js';
 import User from '../models/User.js';
-import { adminDb } from '../config/firebase.js';
+import { adminDb, isFirebaseInitialized } from '../config/firebase.js';
 
 /**
  * Extracts the main topic from questions or complex queries
@@ -132,7 +132,7 @@ export async function getStudyMaterial(req, res) {
     // Step 3: Save to user's history if authenticated
     if (req.userId) {
       try {
-        if (req.authType === 'firebase') {
+        if (req.authType === 'firebase' && isFirebaseInitialized() && adminDb) {
           // Save to Firestore
           const userRef = adminDb.collection('users').doc(req.firebaseUid);
           const userDoc = await userRef.get();

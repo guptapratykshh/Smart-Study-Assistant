@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/database.js';
-import './config/firebase.js'; // Initialize Firebase Admin
+import { isFirebaseInitialized } from './config/firebase.js'; // Initialize Firebase Admin (optional)
 import studyRoutes from './routes/studyRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
@@ -48,7 +48,15 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/study', studyRoutes);
 app.use('/api/auth', authRoutes); // Keep MongoDB auth for backward compatibility
-app.use('/api/firebase', firebaseAuthRoutes); // Firebase auth routes
+
+// Firebase routes (only if Firebase is initialized)
+if (isFirebaseInitialized()) {
+  app.use('/api/firebase', firebaseAuthRoutes);
+  console.log('✅ Firebase auth routes enabled');
+} else {
+  console.log('⚠️  Firebase auth routes disabled (Firebase not configured)');
+}
+
 app.use('/api/history', historyRoutes);
 
 // Error handling middleware
@@ -72,13 +80,26 @@ app.use((req, res) => {
 // Connect to MongoDB and start server
 async function startServer() {
   try {
-    await connectDatabase();
+    // MongoDB connection is optional - server can run without it
+    try {
+      await connectDatabase();
+    } catch (dbError) {
+      console.warn('⚠️  MongoDB connection failed, continuing without database:', dbError.message);
+      console.log('   Study features will work, but history/auth features may be limited');
+    }
     
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📚 Study endpoint: http://localhost:${PORT}/study?topic=YourTopic`);
-      console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth/signup | /api/auth/login`);
-      console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+    // Bind to 0.0.0.0 to allow external connections (required for Render)
+    const HOST = process.env.HOST || '0.0.0.0';
+    
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 Server running on ${HOST}:${PORT}`);
+      console.log(`📚 Study endpoint: http://${HOST}:${PORT}/study?topic=YourTopic`);
+      console.log(`🔐 Auth endpoints: http://${HOST}:${PORT}/api/auth/signup | /api/auth/login`);
+      console.log(`🏥 Health check: http://${HOST}:${PORT}/health`);
+      
+      if (!isFirebaseInitialized()) {
+        console.log('⚠️  Firebase not configured - some features may be unavailable');
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

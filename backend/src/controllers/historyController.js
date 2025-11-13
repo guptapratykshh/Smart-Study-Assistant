@@ -1,12 +1,12 @@
 import User from '../models/User.js';
-import { adminDb } from '../config/firebase.js';
+import { adminDb, isFirebaseInitialized } from '../config/firebase.js';
 
 // Get user's study history
 export async function getHistory(req, res) {
   try {
     let history = [];
 
-    if (req.authType === 'firebase') {
+    if (req.authType === 'firebase' && isFirebaseInitialized() && adminDb) {
       // Get from Firestore
       const userDoc = await adminDb.collection('users').doc(req.firebaseUid).get();
       
@@ -74,7 +74,7 @@ export async function deleteHistoryItem(req, res) {
       });
     }
 
-    if (req.authType === 'firebase') {
+    if (req.authType === 'firebase' && isFirebaseInitialized() && adminDb) {
       // Delete from Firestore
       const userRef = adminDb.collection('users').doc(req.firebaseUid);
       const userDoc = await userRef.get();
@@ -133,7 +133,7 @@ export async function deleteHistoryItem(req, res) {
 // Clear all history
 export async function clearHistory(req, res) {
   try {
-    if (req.authType === 'firebase') {
+    if (req.authType === 'firebase' && isFirebaseInitialized() && adminDb) {
       // Clear Firestore history
       await adminDb.collection('users').doc(req.firebaseUid).update({
         studyHistory: []
