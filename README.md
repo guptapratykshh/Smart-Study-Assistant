@@ -72,7 +72,7 @@ Smart Study Assistant is a full-stack educational tool that helps students learn
 
 5. **Open in Browser**
    - Frontend: http://localhost:3001
-   - Backend API: http://localhost:4000
+   - Backend API: https://smart-study-assistant-1.onrender.com (deployed)
 
 ## 📁 Project Structure
 
@@ -239,7 +239,7 @@ smart-study-assistant/
 ### Development
 
 - **Frontend:** http://localhost:3001
-- **Backend:** http://localhost:4000
+- **Backend:** https://smart-study-assistant-1.onrender.com
 
 ## 🧪 Testing
 
@@ -303,31 +303,31 @@ smart-study-assistant/
 
 #### Test Case 1: Valid Request - Normal Mode
 ```bash
-curl "http://localhost:4000/study?topic=Python&mode=normal"
+curl "https://smart-study-assistant-1.onrender.com/study?topic=Python&mode=normal"
 ```
 **Expected:** 200 OK with JSON containing summary, quiz, and studyTip
 
 #### Test Case 2: Valid Request - Math Mode
 ```bash
-curl "http://localhost:4000/study?topic=2+5&mode=math"
+curl "https://smart-study-assistant-1.onrender.com/study?topic=2+5&mode=math"
 ```
 **Expected:** 200 OK with JSON containing summary, mathQuestion, and studyTip
 
 #### Test Case 3: Missing Topic Parameter
 ```bash
-curl "http://localhost:4000/study?mode=normal"
+curl "https://smart-study-assistant-1.onrender.com/study?mode=normal"
 ```
 **Expected:** 400 Bad Request with error message
 
 #### Test Case 4: Invalid Mode
 ```bash
-curl "http://localhost:4000/study?topic=Python&mode=invalid"
+curl "https://smart-study-assistant-1.onrender.com/study?topic=Python&mode=invalid"
 ```
 **Expected:** 400 Bad Request with error message
 
 #### Test Case 5: Health Check
 ```bash
-curl "http://localhost:4000/health"
+curl "https://smart-study-assistant-1.onrender.com/health"
 ```
 **Expected:** 200 OK with `{"status": "healthy", "timestamp": "..."}`
 
@@ -337,7 +337,7 @@ curl "http://localhost:4000/health"
 
 ```env
 # Server
-PORT=4000
+PORT=4000  # Render will set this automatically
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3001
 
@@ -359,7 +359,7 @@ FIREBASE_PRIVATE_KEY=your_private_key
 ### Frontend (.env.local)
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_API_URL=https://smart-study-assistant-1.onrender.com
 NEXT_PUBLIC_FIREBASE_API_KEY=your_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id

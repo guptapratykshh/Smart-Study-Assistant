@@ -76,9 +76,14 @@ async function startServer() {
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📚 Study endpoint: http://localhost:${PORT}/study?topic=YourTopic`);
-      console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth/signup | /api/auth/login`);
-      console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+      // Only show localhost URLs if running locally (not on Render/other cloud)
+      if (process.env.RENDER || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT) {
+        console.log(`🌐 Server deployed and accessible via configured domain`);
+      } else {
+        console.log(`📚 Study endpoint: http://localhost:${PORT}/study?topic=YourTopic`);
+        console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth/signup | /api/auth/login`);
+        console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

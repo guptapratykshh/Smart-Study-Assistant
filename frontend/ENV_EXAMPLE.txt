@@ -1,7 +1,11 @@
 # Copy this to .env.local and fill in your values
 
 # Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:4000
+# Backend API URL
+# Default: Uses deployed backend (https://smart-study-assistant-1.onrender.com)
+# For local development: Set NEXT_PUBLIC_USE_LOCALHOST=true or NEXT_PUBLIC_API_URL=http://localhost:4000
+# For production: https://smart-study-assistant-1.onrender.com
+NEXT_PUBLIC_API_URL=https://smart-study-assistant-1.onrender.com
 
 # Firebase Configuration (Get from Firebase Console > Project Settings > Your apps > Web app)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here

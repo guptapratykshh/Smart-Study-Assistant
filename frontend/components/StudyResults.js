@@ -25,17 +25,20 @@ export default function StudyResults({ data }) {
 
   return (
     <div className="results">
-      <div className="results-header">
-        <h2>📚 Study Materials: {data.topic}</h2>
-        <a 
-          href={data.source} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="source-link"
-        >
-          📖 View Source
-        </a>
-      </div>
+      {/* Study Materials header - only show in normal mode */}
+      {data.mode !== 'math' && (
+        <div className="results-header">
+          <h2>📚 Study Materials: {data.topic}</h2>
+          <a 
+            href={data.source} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="source-link"
+          >
+            📖 View Source
+          </a>
+        </div>
+      )}
 
       {/* Summary Section */}
       <section className="section summary-section">

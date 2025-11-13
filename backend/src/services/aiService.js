@@ -2,6 +2,8 @@ import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import { HfInference } from '@huggingface/inference';
 import dotenv from 'dotenv';
+import { solveMathExpression, isMathExpression as checkMathExpression } from './mathService.js';
+import { solveWithSymPy, canUseSymPy } from './sympyService.js';
 
 dotenv.config();
 
@@ -25,17 +27,90 @@ const huggingface = process.env.HUGGINGFACE_API_KEY ? new HfInference(process.en
 export async function generateAIContent(topic, context, mode = 'normal') {
   try {
     // Check if topic is a simple math expression (e.g., "2 + 5", "10 * 3")
-    if (mode === 'math' && isMathExpression(topic)) {
+    if (mode === 'math' && checkMathExpression(topic)) {
       console.log(`🔢 Detected math expression: ${topic}`);
-      return generateMathExpressionSolution(topic);
+      try {
+        // Use math.js API for accurate evaluation
+        return await solveMathExpression(topic);
+      } catch (mathError) {
+        console.error('Math.js API failed, using fallback:', mathError.message);
+        // Fallback to local evaluation
+        return generateMathExpressionSolution(topic);
+      }
+    }
+    
+    // Check if it's a SymPy-solvable problem (integration, differentiation, equations)
+    if (mode === 'math' && canUseSymPy(topic)) {
+      console.log(`🔬 Detected SymPy-solvable problem: ${topic}`);
+      // CRITICAL: Clear Wikipedia context - we need to solve, not generate from Wikipedia
+      context = '';
+      try {
+        const sympyResult = await solveWithSymPy(topic);
+        if (sympyResult.success) {
+          console.log('✅ SymPy solved the problem');
+          return {
+            success: true,
+            data: {
+              summary: [
+                'This is a mathematical problem solved using symbolic computation',
+                'SymPy (Python symbolic mathematics library) was used to solve this problem',
+                'The solution includes step-by-step mathematical reasoning'
+              ],
+              mathQuestion: {
+                question: topic,
+                answer: sympyResult.answer,
+                explanation: sympyResult.explanation
+              },
+              studyTip: 'For similar problems, try breaking them down into smaller steps. Understanding the underlying mathematical concepts is key to solving complex problems.'
+            }
+          };
+        }
+      } catch (sympyError) {
+        console.log('⚠️ SymPy failed, falling back to AI:', sympyError.message);
+        // Continue to AI generation below
+      }
     }
     
     // Check if topic is a complex math/logic problem (e.g., algorithmic complexity questions)
     if (mode === 'math' && isComplexMathProblem(topic)) {
       console.log(`🧮 Detected complex math problem: ${topic}`);
-      // For complex problems, use AI to solve them properly
-      // Don't skip to Wikipedia generation - we need AI reasoning
-      console.log('🤖 Using AI to solve complex math problem...');
+      
+      // CRITICAL: For complex math problems, skip Wikipedia context entirely
+      // We need AI to solve the actual problem, not generate from Wikipedia
+      context = ''; // Clear context to force AI generation
+      
+      // Try SymPy first for symbolic math problems
+      if (canUseSymPy(topic)) {
+        try {
+          console.log('🔬 Attempting to solve with SymPy...');
+          const sympyResult = await solveWithSymPy(topic);
+          if (sympyResult.success) {
+            console.log('✅ SymPy solved the problem');
+            return {
+              success: true,
+              data: {
+                summary: [
+                  'This is a mathematical problem that can be solved using symbolic computation',
+                  'SymPy (Python symbolic mathematics library) was used to solve this problem',
+                  'The solution includes step-by-step mathematical reasoning'
+                ],
+                mathQuestion: {
+                  question: topic,
+                  answer: sympyResult.answer,
+                  explanation: sympyResult.explanation
+                },
+                studyTip: 'For similar problems, try breaking them down into smaller steps. Understanding the underlying mathematical concepts is key to solving complex problems.'
+              }
+            };
+          }
+        } catch (sympyError) {
+          console.log('⚠️ SymPy failed, falling back to AI:', sympyError.message);
+          // Continue to AI generation below
+        }
+      }
+      
+      // For complex problems that SymPy can't handle (like algorithmic complexity), use AI
+      console.log('🤖 Using AI to solve complex math problem (Wikipedia context cleared)...');
       // Continue to AI generation below (don't return early)
     } else if (context && context.trim().length > 0) {
       // Only use Wikipedia-based generation for non-complex problems
@@ -49,10 +124,16 @@ export async function generateAIContent(topic, context, mode = 'normal') {
     // Only use AI APIs if no Wikipedia context is available
     // Check which AI provider is available (priority: HuggingFace > Gemini > OpenAI)
     if (!huggingface && !openai && !gemini) {
+      // For complex math problems, don't use mock data - return error
+      if (mode === 'math' && isComplexMathProblem(topic)) {
+        console.error('❌ No AI providers available for complex math problem');
+        throw new Error('AI providers required for complex math problems. Please configure at least one AI API key.');
+      }
       console.log('No AI providers available, using mock data');
       return generateMockContent(topic, mode);
     }
 
+    // For math mode, always use math-specific prompt (even if context exists, it's cleared for complex problems)
     const prompt = mode === 'math' 
       ? createMathModePrompt(topic, context)
       : createNormalModePrompt(topic, context);
@@ -193,6 +274,17 @@ export async function generateAIContent(topic, context, mode = 'normal') {
     };
 
   } catch (error) {
+    // For complex math problems, NEVER use Wikipedia or mock data - they won't solve the problem
+    if (mode === 'math' && isComplexMathProblem(topic)) {
+      console.error('❌ Failed to solve complex math problem with AI:', error.message);
+      // Return an error response instead of mock data
+      return {
+        success: false,
+        error: 'Failed to solve complex math problem. AI providers may be unavailable or rate-limited.',
+        message: error.message
+      };
+    }
+    
     // If we have Wikipedia context, try to generate from it instead of mock data
     if (context && context.trim().length > 0) {
       console.log('⚠️ AI generation error but Wikipedia context available. Generating from Wikipedia content directly.');
@@ -290,38 +382,87 @@ function createMathModePrompt(topic, context) {
   const isComplexProblem = isComplexMathProblem(topic);
   
   if (isComplexProblem) {
-    // For complex problems, solve them directly
-    return `You are an expert mathematician and computer scientist. Solve the following problem and provide a detailed explanation.
+    // For complex problems, solve them directly with enhanced prompt
+    return `You are an expert mathematician and computer scientist. You MUST solve the following problem correctly and provide a detailed explanation.
 
 PROBLEM TO SOLVE:
 ${topic}
 
-IMPORTANT: 
-- If this is an algorithmic complexity question, provide the correct Big O notation and explain why
-- If this is a calculation problem, show all steps
-- If this is a logic problem, explain your reasoning
-- Provide the CORRECT answer with detailed step-by-step explanation
+CRITICAL REQUIREMENTS - READ CAREFULLY:
+
+1. If this is an ALGORITHMIC COMPLEXITY question:
+   - Analyze the algorithm/data structure step by step
+   - Count operations: loops, recursive calls, comparisons, assignments
+   - Provide the correct Big O notation (e.g., O(n), O(log n), O(n log n), O(n²), O(1))
+   - Explain WHY this is the complexity with detailed reasoning
+   - For multiple parts (e.g., "linear search" AND "sort + binary search"), solve EACH part separately
+   - Show your work: "For linear search: worst case checks all n elements = O(n)"
+   - If asked about "overall complexity", consider ALL steps (e.g., sort O(n log n) + search O(log n) = O(n log n))
+
+2. If this is a SITUATION-BASED or WORD PROBLEM:
+   - Read the problem carefully and identify what is being asked
+   - Extract key information: numbers, relationships, constraints
+   - Set up the problem: define variables, write equations if needed
+   - Solve step by step, showing all work
+   - Check your answer: does it make sense? Is it reasonable?
+   - Provide the final answer with units if applicable
+
+3. If this is a CALCULATION problem:
+   - Show ALL steps of your calculation
+   - Explain each step clearly
+   - Show intermediate results
+   - Provide the final numerical answer with appropriate precision
+
+4. If this is a LOGIC or REASONING problem:
+   - Explain your reasoning step by step
+   - Show how you arrived at the answer
+   - Consider edge cases if applicable
+   - Use logical deduction or mathematical principles
+
+5. GENERAL REQUIREMENTS:
+   - DO NOT return generic or placeholder content
+   - DO NOT return hardcoded summaries
+   - DO NOT create a new problem - solve the ONE asked
+   - ACTUALLY SOLVE THE PROBLEM based on the EXACT question asked
+   - Use the specific numbers and details from the problem
 
 Generate your response in the following JSON format:
 {
   "summary": [
-    "Key concept 1 related to this problem",
-    "Key concept 2 related to this problem", 
-    "Key concept 3 related to this problem"
+    "First key concept or step in solving this specific problem",
+    "Second key concept or step in solving this specific problem", 
+    "Third key concept or step in solving this specific problem"
   ],
   "mathQuestion": {
     "question": "${topic}",
-    "answer": "The correct answer to the problem",
-    "explanation": "Detailed step-by-step explanation showing how to solve this problem, including all calculations, reasoning, and concepts used"
+    "answer": "The CORRECT answer to THIS specific problem (use actual numbers from the problem, not generic)",
+    "explanation": "Detailed step-by-step explanation showing EXACTLY how to solve THIS problem. Include: (1) Problem analysis, (2) All calculations with numbers from the problem, (3) Algorithm analysis if applicable, (4) Step-by-step reasoning, (5) Final answer with justification. Show your work clearly."
   },
   "studyTip": "A practical tip for understanding and solving similar problems"
 }
 
+EXAMPLES:
+
+Example 1 - Algorithmic Complexity:
+Question: "You have an array of 1000 numbers. Linear search worst-case time complexity?"
+Answer: "O(n) where n = 1000"
+Explanation: "For linear search, in the worst case, the target element is at the end of the array or not present. This requires checking all n elements. With n = 1000, we check all 1000 elements. Therefore, worst-case time complexity is O(n)."
+
+Example 2 - Multi-part Complexity:
+Question: "You have an array of 1000 numbers. If you sort first then use binary search, what is the overall complexity?"
+Answer: "O(n log n)"
+Explanation: "Step 1: Sorting an array of n elements using an efficient algorithm (like merge sort or quicksort) has time complexity O(n log n). Step 2: Binary search on a sorted array has time complexity O(log n). Overall complexity: O(n log n) + O(log n) = O(n log n) since O(n log n) dominates."
+
+Example 3 - Situation-based:
+Question: "If you have 5 apples and give away 2, how many do you have?"
+Answer: "3 apples"
+Explanation: "Starting with 5 apples, subtracting 2 apples: 5 - 2 = 3. Therefore, you have 3 apples remaining."
+
 CRITICAL: 
-- Solve the problem correctly
-- Show all work and reasoning
-- For complexity questions, explain the algorithm analysis
-- For calculations, show all steps
+- Solve the ACTUAL problem asked, using the EXACT numbers and details provided
+- Show ALL work and reasoning
+- For complexity questions, explain the algorithm analysis in detail with step-by-step counting
+- For situation-based problems, extract information and solve systematically
 - Return ONLY valid JSON, no additional text or markdown formatting`;
   }
   
@@ -1078,6 +1219,7 @@ function isMathExpression(topic) {
 
 /**
  * Checks if the topic is a complex math/logic problem
+ * Includes situation-based questions, word problems, and algorithmic complexity
  */
 function isComplexMathProblem(topic) {
   const lowerTopic = topic.toLowerCase();
@@ -1086,28 +1228,56 @@ function isComplexMathProblem(topic) {
   const complexityKeywords = [
     'time complexity', 'space complexity', 'big o', 'worst-case', 'best-case',
     'linear search', 'binary search', 'sort', 'algorithm', 'array', 'worst case',
-    'overall complexity', 'asymptotic', 'o(n)', 'o(log n)', 'o(n log n)'
+    'overall complexity', 'asymptotic', 'o(n)', 'o(log n)', 'o(n log n)',
+    'data structure', 'tree', 'graph', 'hash', 'heap', 'stack', 'queue'
   ];
   
   // Check for calculation problem keywords
   const calculationKeywords = [
     'calculate', 'solve', 'find', 'what is', 'how many', 'determine',
-    'compute', 'evaluate', 'result', 'answer'
+    'compute', 'evaluate', 'result', 'answer', 'work out', 'figure out'
   ];
   
   // Check for logic/math problem indicators
   const problemIndicators = [
     'if you', 'suppose', 'given that', 'assume', 'problem', 'question',
-    'how would', 'what would', 'how much', 'how long'
+    'how would', 'what would', 'how much', 'how long', 'scenario',
+    'situation', 'case', 'example', 'instance', 'when', 'where'
+  ];
+  
+  // Check for situation-based/problem-solving keywords
+  const situationKeywords = [
+    'you have', 'you are', 'you need', 'you want', 'given',
+    'there are', 'there is', 'consider', 'imagine', 'think about',
+    'word problem', 'story problem', 'real-world', 'practical'
+  ];
+  
+  // Check for word problem indicators
+  const wordProblemIndicators = [
+    'how many', 'how much', 'how long', 'how far', 'how fast',
+    'what is the', 'what are the', 'which', 'why', 'explain'
   ];
   
   const hasComplexityTerms = complexityKeywords.some(keyword => lowerTopic.includes(keyword));
   const hasCalculationTerms = calculationKeywords.some(keyword => lowerTopic.includes(keyword));
   const hasProblemIndicators = problemIndicators.some(keyword => lowerTopic.includes(keyword));
+  const hasSituationKeywords = situationKeywords.some(keyword => lowerTopic.includes(keyword));
+  const hasWordProblemIndicators = wordProblemIndicators.some(keyword => lowerTopic.includes(keyword));
   const hasQuestionMark = topic.includes('?');
+  const hasMultipleSentences = topic.split(/[.!?]/).length > 2; // Word problems are usually longer
   
-  return hasComplexityTerms || (hasCalculationTerms && hasProblemIndicators) || 
-         (hasQuestionMark && (hasComplexityTerms || hasCalculationTerms));
+  // It's a complex problem if:
+  // 1. Has complexity terms (algorithmic)
+  // 2. Has situation keywords (situation-based)
+  // 3. Has calculation terms + problem indicators (word problems)
+  // 4. Has word problem indicators + multiple sentences (word problems)
+  // 5. Has question mark + (complexity or calculation terms)
+  
+  return hasComplexityTerms || 
+         hasSituationKeywords ||
+         (hasCalculationTerms && hasProblemIndicators) || 
+         (hasWordProblemIndicators && hasMultipleSentences) ||
+         (hasQuestionMark && (hasComplexityTerms || hasCalculationTerms || hasSituationKeywords));
 }
 
 /**

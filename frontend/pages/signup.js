@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import styles from '../styles/Auth.module.css';
+import { getApiUrl } from '../src/config/api';
 
 export default function Signup() {
   const router = useRouter();
@@ -224,7 +225,7 @@ export default function Signup() {
       console.log('✅ Firebase token obtained');
 
       // Create user document in Firestore via backend (bypasses security rules)
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const API_URL = getApiUrl();
       try {
         const response = await fetch(`${API_URL}/api/firebase/create-user`, {
           method: 'POST',
@@ -356,7 +357,7 @@ export default function Signup() {
               onChange={handleChange}
               required
               className={styles.input}
-              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}"
               title="Please enter a valid email address"
             />
           </div>

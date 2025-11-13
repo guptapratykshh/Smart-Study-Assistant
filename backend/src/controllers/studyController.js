@@ -90,34 +90,46 @@ export async function getStudyMaterial(req, res) {
 
     console.log(`Processing request for topic: "${topic}", mode: ${mode}`);
 
-    // Extract main topic from questions (e.g., "What is Python?" -> "Python")
-    const cleanTopic = extractMainTopic(topic);
+    // For math mode, use original topic (complex problems need full question)
+    // For normal mode, extract main topic (e.g., "What is Python?" -> "Python")
+    const topicToUse = mode === 'math' ? topic : extractMainTopic(topic);
+    const cleanTopic = mode === 'math' ? topic : extractMainTopic(topic);
 
-    // Step 1: Fetch data from Wikipedia (try both original and cleaned topic)
-    let wikipediaData = await fetchWikipediaData(cleanTopic);
+    // Step 1: Fetch data from Wikipedia (skip for math mode - we need to solve, not look up)
+    let wikipediaData = { success: false, extract: '', error: 'Skipped for math mode' };
     
-    // If original topic fails, try the cleaned version
-    if (!wikipediaData.success && cleanTopic !== topic) {
-      console.log(`Trying original topic "${topic}" after cleaned version failed`);
-      wikipediaData = await fetchWikipediaData(topic);
+    // CRITICAL: For math mode, skip Wikipedia entirely
+    // Math problems need to be solved, not looked up in Wikipedia
+    // Wikipedia would give irrelevant content (like "numerical integration" article)
+    if (mode === 'normal') {
+      wikipediaData = await fetchWikipediaData(topicToUse);
+      
+      // If original topic fails, try the cleaned version
+      if (!wikipediaData.success && cleanTopic !== topic) {
+        console.log(`Trying original topic "${topic}" after cleaned version failed`);
+        wikipediaData = await fetchWikipediaData(topic);
+      }
+    } else {
+      console.log(`⚠️ Wikipedia fetch skipped for math mode - will solve the problem directly`);
     }
 
-    // Use Wikipedia context if available, otherwise empty string (will use mock data)
+    // Use Wikipedia context if available, otherwise empty string
+    // For complex math problems, context will be cleared in generateAIContent
     const context = wikipediaData.success ? wikipediaData.extract : '';
     
     if (wikipediaData.success) {
       console.log(`✅ Wikipedia data fetched successfully. Context length: ${context.length} characters`);
       console.log(`Wikipedia title: ${wikipediaData.title}`);
     } else {
-      console.log(`⚠️ Wikipedia fetch failed: ${wikipediaData.error}. Will use mock data or AI without context.`);
+      console.log(`⚠️ Wikipedia fetch skipped or failed. Will use AI or mock data.`);
     }
 
     // Step 2: Generate AI content
-    // If Wikipedia data is available, AI will use it to generate content
-    // If not available, AI will use mock data or generate based on topic name
+    // For math mode, pass original topic (needed for complex problems)
+    // For normal mode, use cleaned topic for better matching
     const aiContent = await generateAIContent(
-      cleanTopic, // Use cleaned topic for better matching
-      context, // Pass Wikipedia context (empty if fetch failed)
+      mode === 'math' ? topic : cleanTopic, // Use original topic for math mode
+      context, // Pass Wikipedia context (will be cleared for complex math problems)
       mode
     );
 

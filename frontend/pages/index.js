@@ -6,6 +6,7 @@ import StudyResults from '../components/StudyResults'
 import ThemeToggle from '../components/ThemeToggle'
 import History from '../components/History'
 import LandingPage from '../components/LandingPage'
+import { getApiUrl } from '../src/config/api'
 
 export default function Home() {
   const router = useRouter()
@@ -16,7 +17,10 @@ export default function Home() {
   const [user, setUser] = useState(null)
   const [showLanding, setShowLanding] = useState(true)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+  // Get API URL from centralized config
+  // Default: Uses deployed backend (https://smart-study-assistant-1.onrender.com)
+  // To use localhost for testing: Create .env.local with NEXT_PUBLIC_USE_LOCALHOST=true
+  const FINAL_API_URL = getApiUrl()
 
   // Fetch history from Firestore/MongoDB
   const fetchHistory = async () => {
@@ -28,7 +32,7 @@ export default function Home() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-      const response = await fetch(`${API_URL}/api/history`, {
+      const response = await fetch(`${FINAL_API_URL}/api/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         },
@@ -135,7 +139,7 @@ export default function Home() {
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
       const response = await fetch(
-        `${API_URL}/study?topic=${encodeURIComponent(topic)}&mode=${mode}`,
+        `${FINAL_API_URL}/study?topic=${encodeURIComponent(topic)}&mode=${mode}`,
         { 
           headers,
           signal: controller.signal
@@ -155,7 +159,11 @@ export default function Home() {
         throw new Error(data.message || 'Failed to fetch study materials')
       }
 
-      setResults(data)
+      // Ensure mode is included in results
+      setResults({
+        ...data,
+        mode: mode || data.mode || 'normal'
+      })
       setShowLanding(false) // Hide landing page when results are shown
 
       // Refresh history from MongoDB if logged in, otherwise use localStorage
@@ -186,7 +194,7 @@ export default function Home() {
       if (err.name === 'AbortError') {
         errorMessage = 'Request timed out. The server is taking too long to respond. Please try again.'
       } else if (err.message?.includes('Failed to fetch') || err.message?.includes('ERR_CONNECTION_REFUSED') || err.message?.includes('NetworkError')) {
-        errorMessage = 'Cannot connect to server. Please make sure the backend is running on port 4000.'
+        errorMessage = `Cannot connect to backend server at ${FINAL_API_URL}. Please check if the backend is deployed and running.`
       } else if (err.message) {
         errorMessage = err.message
       }
@@ -207,7 +215,7 @@ export default function Home() {
     if (token) {
       // Clear from MongoDB
       try {
-        const response = await fetch(`${API_URL}/api/history`, {
+        const response = await fetch(`${FINAL_API_URL}/api/history`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -235,7 +243,7 @@ export default function Home() {
     if (token) {
       // Delete from MongoDB
       try {
-        const response = await fetch(`${API_URL}/api/history/${itemId}`, {
+        const response = await fetch(`${FINAL_API_URL}/api/history/${itemId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -268,11 +276,15 @@ export default function Home() {
       </Head>
 
       {showLanding && !results ? (
-        <LandingPage onGetStarted={() => setShowLanding(false)} />
+        <LandingPage onGetStarted={() => {
+          setShowLanding(false)
+          setResults(null) // Ensure results are cleared
+        }} />
       ) : (
         <div className="container">
           {/* Top Navigation Bar - Left: Back to Home */}
-          {!showLanding && (
+          {/* Show button when we have results or when not on landing page */}
+          {(results || !showLanding) && (
             <div style={{ 
               position: 'absolute',
               top: '1rem',
@@ -280,7 +292,11 @@ export default function Home() {
               zIndex: 10
             }}>
               <button
-                onClick={() => setShowLanding(true)}
+                onClick={() => {
+                  setShowLanding(true)
+                  setResults(null) // Clear results when going back to home
+                  setError(null) // Clear any errors
+                }}
                 className="landing-nav-button"
                 style={{
                   padding: '0.75rem 1.5rem',
@@ -455,9 +471,15 @@ export default function Home() {
                 <div>
                   <h3>Oops! Something went wrong</h3>
                   <p>{error}</p>
-                  {error.includes('Cannot connect to server') && (
+                  {error.includes('Cannot connect to backend') && (
                     <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>
-                      💡 Make sure the backend server is running: <code style={{ background: 'var(--color-bg)', padding: '0.2rem 0.4rem', borderRadius: '0.25rem' }}>cd backend && npm run dev</code>
+                      💡 Backend URL: <code style={{ background: 'var(--color-bg)', padding: '0.2rem 0.4rem', borderRadius: '0.25rem' }}>{FINAL_API_URL}</code>
+                      <br />
+                      {FINAL_API_URL.includes('localhost') ? (
+                        <>If running locally, start backend: <code style={{ background: 'var(--color-bg)', padding: '0.2rem 0.4rem', borderRadius: '0.25rem' }}>cd backend && npm run dev</code></>
+                      ) : (
+                        <>The backend should be deployed and accessible. If issues persist, check the deployment status.</>
+                      )}
                     </p>
                   )}
                 </div>

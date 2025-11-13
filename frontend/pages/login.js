@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import styles from '../styles/Auth.module.css';
+import { getApiUrl } from '../src/config/api';
 
 export default function Login() {
   const router = useRouter();
@@ -74,7 +75,7 @@ export default function Login() {
         } else {
           // Only create if document doesn't exist (for users who signed up before Firestore was set up)
           console.log('⚠️ Firestore user document not found, creating it for existing user...');
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+          const API_URL = getApiUrl();
           try {
             const response = await fetch(`${API_URL}/api/firebase/create-user`, {
               method: 'POST',
