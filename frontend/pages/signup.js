@@ -24,9 +24,165 @@ export default function Signup() {
     setError('');
   };
 
+  // Email validation function
+  const validateEmail = (email) => {
+    // Trim whitespace
+    email = email.trim();
+    
+    // Basic email regex pattern
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    // Check basic format
+    if (!emailRegex.test(email)) {
+      return { valid: false, message: 'Please enter a valid email address (e.g., user@example.com)' };
+    }
+    
+    // Check for valid domain (must have at least one dot after @)
+    const parts = email.split('@');
+    if (parts.length !== 2) {
+      return { valid: false, message: 'Invalid email format' };
+    }
+    
+    const domain = parts[1].toLowerCase();
+    const domainParts = domain.split('.');
+    
+    // Domain must have at least 2 parts (e.g., example.com, not just "com")
+    if (domainParts.length < 2) {
+      return { valid: false, message: 'Email domain must be valid (e.g., @gmail.com, @example.com)' };
+    }
+    
+    // Check domain extension (TLD) is at least 2 characters
+    const tld = domainParts[domainParts.length - 1];
+    if (tld.length < 2) {
+      return { valid: false, message: 'Email must have a valid domain extension (e.g., .com, .org)' };
+    }
+    
+    // List of legitimate email providers (whitelist)
+    const legitimateProviders = [
+      'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com',
+      'protonmail.com', 'aol.com', 'mail.com', 'yandex.com', 'zoho.com',
+      'gmx.com', 'live.com', 'msn.com', 'rediffmail.com', 'sify.com',
+      'example.com', 'test.com', 'company.com', 'business.com',
+      // Educational domains
+      'edu', 'ac.uk', 'edu.au', 'edu.in',
+      // Common country-specific
+      'co.uk', 'co.in', 'co.nz', 'co.za',
+      // Corporate domains (we'll allow any .com, .org, .net, etc. for business emails)
+    ];
+    
+    // Check for common typos in popular email providers
+    const commonTypos = {
+      'gmaail.com': 'gmail.com',
+      'gmial.com': 'gmail.com',
+      'gmaill.com': 'gmail.com',
+      'gmai.com': 'gmail.com',
+      'gmail.co': 'gmail.com',
+      'gmai.com': 'gmail.com',
+      'yahooo.com': 'yahoo.com',
+      'yaho.com': 'yahoo.com',
+      'outlok.com': 'outlook.com',
+      'outllok.com': 'outlook.com',
+      'hotmial.com': 'hotmail.com',
+      'hotmai.com': 'hotmail.com',
+    };
+    
+    // Check if domain is a known typo
+    if (commonTypos[domain]) {
+      return { 
+        valid: false, 
+        message: `Did you mean ${parts[0]}@${commonTypos[domain]}? Please use a valid email address.` 
+      };
+    }
+    
+    // Extract base domain (without subdomains) for checking
+    const baseDomain = domainParts.length >= 2 
+      ? domainParts.slice(-2).join('.') 
+      : domain;
+    
+    // Check if it's a legitimate provider
+    const isLegitimateProvider = legitimateProviders.some(provider => {
+      // Exact match
+      if (domain === provider || baseDomain === provider) return true;
+      // For providers like .edu, check if TLD matches
+      if (provider.startsWith('.') && domain.endsWith(provider)) return true;
+      // For providers without TLD, check if domain ends with it
+      if (!provider.includes('.') && domain.endsWith('.' + provider)) return true;
+      return false;
+    });
+    
+    // If not a known provider, check if it looks legitimate
+    if (!isLegitimateProvider) {
+      const domainName = domainParts[0];
+      
+      // Allow corporate/educational domains (must have proper structure)
+      // But reject suspicious patterns
+      if (domainName.length > 8) {
+        const consonantCount = (domainName.match(/[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]/g) || []).length;
+        const vowelCount = (domainName.match(/[aeiouAEIOU]/g) || []).length;
+        
+        // Very suspicious: no vowels and many consonants
+        if (vowelCount === 0 && consonantCount > 8) {
+          return { valid: false, message: 'Email domain appears to be invalid. Please use a legitimate email provider like Gmail, Yahoo, or Outlook.' };
+        }
+        
+        // Suspicious: very low vowel ratio
+        if (domainName.length > 10 && vowelCount / domainName.length < 0.15) {
+          return { valid: false, message: 'Email domain appears to be invalid. Please use a legitimate email provider.' };
+        }
+      }
+      
+      // For unknown domains, require at least one vowel (most real domains have vowels)
+      const domainNameLower = domainName.toLowerCase();
+      if (domainName.length > 6 && !/[aeiou]/.test(domainNameLower)) {
+        return { valid: false, message: 'Email domain appears to be invalid. Please use a legitimate email provider like Gmail, Yahoo, or Outlook.' };
+      }
+    }
+    
+    // Check for common invalid patterns
+    const invalidPatterns = [
+      /^[^@]+@[^@]+@/,  // Multiple @ symbols
+      /\.\./,           // Consecutive dots
+      /^\./,            // Starts with dot
+      /\.$/,            // Ends with dot
+      /@\./,            // @ followed by dot
+      /\.@/,            // Dot before @
+    ];
+    
+    for (const pattern of invalidPatterns) {
+      if (pattern.test(email)) {
+        return { valid: false, message: 'Invalid email format detected' };
+      }
+    }
+    
+    // Check email length (reasonable limits)
+    if (email.length > 254) {
+      return { valid: false, message: 'Email address is too long (max 254 characters)' };
+    }
+    
+    if (parts[0].length === 0) {
+      return { valid: false, message: 'Email must have a username before @' };
+    }
+    
+    if (parts[0].length > 64) {
+      return { valid: false, message: 'Email username is too long (max 64 characters)' };
+    }
+    
+    return { valid: true };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Trim email
+    const trimmedEmail = formData.email.trim();
+    
+    // Validate email format
+    const emailValidation = validateEmail(trimmedEmail);
+    if (!emailValidation.valid) {
+      setError(emailValidation.message);
+      return;
+    }
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
@@ -43,14 +199,20 @@ export default function Signup() {
       setError('Username must be at least 3 characters');
       return;
     }
+    
+    // Additional username validation
+    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      setError('Username can only contain letters, numbers, and underscores');
+      return;
+    }
 
     setLoading(true);
 
     try {
-      // Create user with Firebase Auth
+      // Create user with Firebase Auth (use trimmed email)
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        formData.email,
+        trimmedEmail.toLowerCase(), // Normalize to lowercase
         formData.password
       );
 
@@ -73,7 +235,7 @@ export default function Signup() {
           body: JSON.stringify({
             uid: user.uid,
             username: formData.username,
-            email: formData.email,
+            email: trimmedEmail.toLowerCase(), // Use normalized email
             displayName: formData.username
           })
         });
@@ -94,7 +256,7 @@ export default function Signup() {
             try {
               await setDoc(doc(db, 'users', user.uid), {
                 username: formData.username,
-                email: formData.email,
+                email: trimmedEmail.toLowerCase(), // Use normalized email
                 displayName: formData.username,
                 createdAt: new Date().toISOString(),
                 studyHistory: []
@@ -112,7 +274,7 @@ export default function Signup() {
         try {
           await setDoc(doc(db, 'users', user.uid), {
             username: formData.username,
-            email: formData.email,
+            email: trimmedEmail.toLowerCase(), // Use normalized email
             displayName: formData.username,
             createdAt: new Date().toISOString(),
             studyHistory: []
@@ -189,11 +351,13 @@ export default function Signup() {
             <input
               type="email"
               name="email"
-              placeholder="E-mail"
+              placeholder="E-mail (e.g., user@example.com)"
               value={formData.email}
               onChange={handleChange}
               required
               className={styles.input}
+              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+              title="Please enter a valid email address"
             />
           </div>
 
