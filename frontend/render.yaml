@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: smart-study-assistant-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://smart-study-assistant-1.onrender.com
+    healthCheckPath: /
+
