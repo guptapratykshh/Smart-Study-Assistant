@@ -3,8 +3,8 @@
 An AI-powered web application that generates personalized study materials including summaries, quizzes, and study tips from any topic using Wikipedia and AI APIs.
 
 ![Smart Study Assistant](https://img.shields.io/badge/Status-Active-success)
-![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black)
-![React](https://img.shields.io/badge/React-18.2.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-14.2.0-black)
+![React](https://img.shields.io/badge/React-18.3.1-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-green)
 
 ## 📋 Overview
@@ -233,13 +233,14 @@ smart-study-assistant/
 
 ### Production Deployment
 
-- **Frontend:** [Your Vercel/Netlify URL]
-- **Backend:** [Your Render/Railway/Heroku URL]
+- **Frontend (Vercel):** [https://smart-study-assistant-smc5.vercel.app](https://smart-study-assistant-smc5.vercel.app)
+- **Frontend (Netlify):** [https://smart-study-assistantt.netlify.app](https://smart-study-assistantt.netlify.app)
+- **Backend (Render):** [https://smart-study-assistant-1.onrender.com](https://smart-study-assistant-1.onrender.com)
 
 ### Development
 
-- **Frontend:** http://localhost:3001
-- **Backend:** https://smart-study-assistant-1.onrender.com
+- **Frontend:** https://smart-study-assistantt.netlify.app (deployed) http://localhost:3001 (local)
+- **Backend:** https://smart-study-assistant-1.onrender.com (deployed) or http://localhost:4000 (local)
 
 ## 🧪 Testing
 
@@ -338,8 +339,8 @@ curl "https://smart-study-assistant-1.onrender.com/health"
 ```env
 # Server
 PORT=4000  # Render will set this automatically
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3001
+NODE_ENV=production  # Use 'development' for local dev
+FRONTEND_URL=http://localhost:3001  # Optional, CORS auto-configures for deployments
 
 # AI APIs (at least one required)
 HUGGINGFACE_API_KEY=your_key_here
@@ -354,7 +355,15 @@ JWT_SECRET=your_secret_key
 FIREBASE_PROJECT_ID=your_project_id
 FIREBASE_CLIENT_EMAIL=your_client_email
 FIREBASE_PRIVATE_KEY=your_private_key
+FIREBASE_PRIVATE_KEY_ID=your_private_key_id
+FIREBASE_CLIENT_ID=your_client_id
 ```
+
+**Note:** The backend automatically allows CORS from:
+- `https://smart-study-assistant-smc5.vercel.app` (Vercel)
+- `https://smart-study-assistantt.netlify.app` (Netlify)
+- `http://localhost:3001` and `http://localhost:3000` (local dev)
+- Any localhost origin (for development)
 
 ### Frontend (.env.local)
 
@@ -402,16 +411,60 @@ This project uses the following AI services and tools:
 - **JWT** - Authentication tokens
 
 ### Frontend
-- **Next.js 14** - React framework
-- **React 18** - UI library
+- **Next.js 14.2.0** - React framework
+- **React 18.3.1** - UI library
 - **Firebase Client SDK** - Authentication
-- **CSS3** - Styling with animations
+- **CSS3** - Styling with animations and theme support
 
 ### APIs & Services
 - **Wikipedia MediaWiki API** - Content source
 - **HuggingFace Inference API** - AI generation
 - **Google Gemini API** - AI generation
 - **OpenAI API** - AI generation
+
+## 🚀 Deployment
+
+### Backend Deployment (Render)
+
+1. Connect your GitHub repository to Render
+2. Create a new **Web Service**
+3. Configure:
+   - **Root Directory:** `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm run dev`
+   - **Environment:** Node.js 18+
+4. Add environment variables from `.env.example`
+5. Deploy!
+
+### Frontend Deployment
+
+#### Vercel
+1. Import your GitHub repository
+2. Framework Preset: **Next.js** (auto-detected)
+3. Root Directory: `frontend`
+4. Build Command: `npm run dev`
+5. Add environment variables (Firebase config, API URL)
+6. Deploy!
+
+#### Netlify
+1. Import your GitHub repository
+2. Base Directory: `frontend`
+3. Build Command: `npm run build`
+4. Publish Directory: `.next`
+5. Add environment variables
+6. Deploy!
+
+**Note:** Both Vercel and Netlify deployments are automatically configured in the backend CORS settings.
+
+## 🔒 CORS Configuration
+
+The backend supports multiple frontend origins:
+- Vercel: `https://smart-study-assistant-smc5.vercel.app`
+- Netlify: `https://smart-study-assistantt.netlify.app`
+- Local development: `http://localhost:3001`, `http://localhost:3000`
+- Any localhost origin (for development flexibility)
+
+CORS is automatically configured - no additional setup needed!
 
 ## 📝 License
 
@@ -424,8 +477,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📧 Contact
 
 For questions or support, please open an issue on GitHub.
-
----
-
-**Built with ❤️ using AI and Wikipedia**
-
