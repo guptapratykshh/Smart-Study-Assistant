@@ -30,6 +30,7 @@ FRONTEND_URL=http://localhost:3001
 # - https://smart-study-assistantt.netlify.app (Netlify)
 # - https://smart-study-assistant.netlify.app (Netlify alt)
 # - https://smart-study-assistant-smc5.vercel.app (Vercel)
+# - https://smart-study-assistant-rho.vercel.app (Vercel)
 # - Any localhost origin (for development)
 # 
 # Additional origins can be added via environment variables:

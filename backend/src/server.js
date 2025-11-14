@@ -20,6 +20,7 @@ const allowedOrigins = [
   'https://smart-study-assistantt.netlify.app',
   'https://smart-study-assistant.netlify.app',
   'https://smart-study-assistant-smc5.vercel.app',
+  'https://smart-study-assistant-rho.vercel.app',
   process.env.FRONTEND_URL,
   process.env.VERCEL_URL,
   process.env.NETLIFY_URL
