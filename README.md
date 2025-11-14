@@ -233,7 +233,7 @@ smart-study-assistant/
 
 ### Production Deployment
 
-- **Frontend (Vercel):** [https://smart-study-assistant-smc5.vercel.app](https://smart-study-assistant-smc5.vercel.app)
+- **Frontend (Vercel):** [https://smart-study-assistant-rho.vercel.app](https://smart-study-assistant-rho.vercel.app)
 - **Frontend (Netlify):** [https://smart-study-assistantt.netlify.app](https://smart-study-assistantt.netlify.app)
 - **Backend (Render):** [https://smart-study-assistant-1.onrender.com](https://smart-study-assistant-1.onrender.com)
 
@@ -360,7 +360,7 @@ FIREBASE_CLIENT_ID=your_client_id
 ```
 
 **Note:** The backend automatically allows CORS from:
-- `https://smart-study-assistant-smc5.vercel.app` (Vercel)
+- `https://smart-study-assistant-rho.vercel.app` (Vercel)
 - `https://smart-study-assistantt.netlify.app` (Netlify)
 - `http://localhost:3001` and `http://localhost:3000` (local dev)
 - Any localhost origin (for development)
@@ -459,7 +459,7 @@ This project uses the following AI services and tools:
 ## CORS Configuration
 
 The backend supports multiple frontend origins:
-- Vercel: `https://smart-study-assistant-smc5.vercel.app`
+- Vercel: `https://smart-study-assistant-rho.vercel.app`
 - Netlify: `https://smart-study-assistantt.netlify.app`
 - Local development: `http://localhost:3001`, `http://localhost:3000`
 - Any localhost origin (for development flexibility)
