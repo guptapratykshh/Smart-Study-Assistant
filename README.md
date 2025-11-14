@@ -71,7 +71,7 @@ Smart Study Assistant is a full-stack educational tool that helps students learn
    ```
 
 5. **Open in Browser**
-   - Frontend: http://localhost:3001
+   - Frontend:  https://smart-study-assistantt.netlify.app (deployed)
    - Backend API: https://smart-study-assistant-1.onrender.com (deployed)
 
 ## Project Structure
