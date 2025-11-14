@@ -1,4 +1,4 @@
-# 🎓 Smart Study Assistant
+# Smart Study Assistant
 
 An AI-powered web application that generates personalized study materials including summaries, quizzes, and study tips from any topic using Wikipedia and AI APIs.
 
@@ -7,7 +7,7 @@ An AI-powered web application that generates personalized study materials includ
 ![React](https://img.shields.io/badge/React-18.3.1-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-green)
 
-## 📋 Overview
+## Overview
 
 Smart Study Assistant is a full-stack educational tool that helps students learn any topic efficiently. Simply enter a topic, and the app will:
 
@@ -18,15 +18,15 @@ Smart Study Assistant is a full-stack educational tool that helps students learn
 
 ### Key Features
 
-- ✅ **Wikipedia Integration**: Fetches real-time data from Wikipedia API
-- ✅ **AI-Powered Content**: Uses HuggingFace, Google Gemini, or OpenAI to generate study materials
-- ✅ **Math Mode**: Solve quantitative/logic problems with step-by-step explanations
-- ✅ **User Authentication**: Firebase-based login/signup with study history tracking
-- ✅ **Dark Mode**: Beautiful light/dark theme toggle
-- ✅ **Study History**: Track and revisit past topics (stored in MongoDB/Firestore)
-- ✅ **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Wikipedia Integration**: Fetches real-time data from Wikipedia API
+- **AI-Powered Content**: Uses HuggingFace, Google Gemini, or OpenAI to generate study materials
+- **Math Mode**: Solve quantitative/logic problems with step-by-step explanations
+- **User Authentication**: Firebase-based login/signup with study history tracking
+- **Dark Mode**: Beautiful light/dark theme toggle
+- **Study History**: Track and revisit past topics (stored in MongoDB/Firestore)
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -74,7 +74,7 @@ Smart Study Assistant is a full-stack educational tool that helps students learn
    - Frontend: http://localhost:3001
    - Backend API: https://smart-study-assistant-1.onrender.com (deployed)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 smart-study-assistant/
@@ -99,7 +99,7 @@ smart-study-assistant/
 └── README.md
 ```
 
-## 🔌 API Details
+## API Details
 
 ### Main Endpoint
 
@@ -188,7 +188,7 @@ smart-study-assistant/
 - **DELETE** `/api/history` - Clear history
 - **DELETE** `/api/history/:id` - Delete specific history item
 
-## 💡 Prompt Examples
+## Prompt Examples
 
 ### Normal Mode Examples
 
@@ -229,7 +229,7 @@ smart-study-assistant/
    GET /study?topic=Calculate%20the%20derivative%20of%20x%5E2%20%2B%203x&mode=math
    ```
 
-## 🌐 Hosted URLs
+## Hosted URLs
 
 ### Production Deployment
 
@@ -242,7 +242,7 @@ smart-study-assistant/
 - **Frontend:** https://smart-study-assistantt.netlify.app (deployed) http://localhost:3001 (local)
 - **Backend:** https://smart-study-assistant-1.onrender.com (deployed) or http://localhost:4000 (local)
 
-## 🧪 Testing
+## Testing
 
 ### Manual Test Plan
 
@@ -332,7 +332,7 @@ curl "https://smart-study-assistant-1.onrender.com/health"
 ```
 **Expected:** 200 OK with `{"status": "healthy", "timestamp": "..."}`
 
-## 🔧 Environment Variables
+## Environment Variables
 
 ### Backend (.env)
 
@@ -377,7 +377,7 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-## 🤖 AI Tools Used
+## AI Tools Used
 
 This project uses the following AI services and tools:
 
@@ -400,7 +400,7 @@ This project uses the following AI services and tools:
 - Wikipedia data is fetched from public APIs
 - User data is stored securely in MongoDB/Firestore
 
-## 📚 Technologies Used
+## Technologies Used
 
 ### Backend
 - **Node.js** - Runtime environment
@@ -422,7 +422,7 @@ This project uses the following AI services and tools:
 - **Google Gemini API** - AI generation
 - **OpenAI API** - AI generation
 
-## 🚀 Deployment
+## Deployment
 
 ### Backend Deployment (Render)
 
@@ -456,7 +456,7 @@ This project uses the following AI services and tools:
 
 **Note:** Both Vercel and Netlify deployments are automatically configured in the backend CORS settings.
 
-## 🔒 CORS Configuration
+## CORS Configuration
 
 The backend supports multiple frontend origins:
 - Vercel: `https://smart-study-assistant-smc5.vercel.app`
@@ -466,14 +466,14 @@ The backend supports multiple frontend origins:
 
 CORS is automatically configured - no additional setup needed!
 
-## 📝 License
+## License
 
 MIT License - See LICENSE file for details
 
-## 👥 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📧 Contact
+## Contact
 
 For questions or support, please open an issue on GitHub.
